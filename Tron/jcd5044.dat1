@@ -1,0 +1,364 @@
+// jcd5044.dat1
+// Description: rules file for Inference Engine
+
+// DEFAULT SITUATIONS ///////////////////////////////////////////////////////////////////////////////////////////
+// If no moves are possible -------------------------------------------------------------------------------------
+IF BOARD(MEx,MEy-1) > 0 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx+1,MEy) > 0 THEN STOP
+
+// If only one move is possible ---------------------------------------------------------------------------------
+IF BOARD(MEx, MEy+1) > 0 AND BOARD(MEx, MEy-1) > 0 AND BOARD(MEx-1, MEy) > 0 AND BOARD(MEx+1, MEy) = 0 THEN MOVEx = MEx + 1, STOP
+IF BOARD(MEx, MEy+1) > 0 AND BOARD(MEx, MEy-1) > 0 AND BOARD(MEx-1, MEy) = 0 AND BOARD(MEx+1, MEy) > 0 THEN MOVEx = MEx - 1, STOP
+IF BOARD(MEx, MEy+1) > 0 AND BOARD(MEx, MEy-1) = 0 AND BOARD(MEx-1, MEy) > 0 AND BOARD(MEx+1, MEy) > 0 THEN MOVEy = MEy - 1, STOP
+IF BOARD(MEx, MEy+1) = 0 AND BOARD(MEx, MEy-1) > 0 AND BOARD(MEx-1, MEy) > 0 AND BOARD(MEx+1, MEy) > 0 THEN MOVEy = MEy + 1, STOP
+
+// Always moves in the direction of greatest available area, if given a choice ----------------------------------
+IF AREA(MEx-1,MEy) > AREA(MEx+1,MEy) AND AREA(MEx-1,MEy) > AREA(MEx,MEy-1) AND AREA(MEx-1,MEy) > AREA(MEx,MEy+1) THEN MOVEx = MEx-1, STOP
+IF AREA(MEx+1,MEy) > AREA(MEx-1,MEy) AND AREA(MEx+1,MEy) > AREA(MEx,MEy-1) AND AREA(MEx+1,MEy) > AREA(MEx,MEy+1) THEN MOVEx = MEx+1, STOP
+IF AREA(MEx,MEy-1) > AREA(MEx+1,MEy) AND AREA(MEx,MEy-1) > AREA(MEx-1,MEy) AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF AREA(MEx,MEy+1) > AREA(MEx+1,MEy) AND AREA(MEx,MEy+1) > AREA(MEx-1,MEy) AND AREA(MEx,MEy+1) > AREA(MEx,MEy-1) THEN MOVEy = MEy+1, STOP
+
+// OPPONENT INFORMATION /////////////////////////////////////////////////////////////////////////////////////////
+// Determine the Distance of the opponent on the x and y axis ---------------------------------------------------
+IF OPPx - MEx > 0 THEN distx = OPPx - MEx
+IF MEx - OPPx > 0 THEN distx = MEx - OPPx
+IF MEx = OPPx THEN distx = 0
+IF OPPy - MEy > 0 THEN disty = OPPy - MEy
+IF MEy - OPPy > 0 THEN disty = MEy - OPPy
+IF MEy = OPPy THEN disty = 0
+
+IF CURRENTTURN < 10 THEN ATTACK = 1, SURROUND = 0
+IF CURRENTTURN >= 10 THEN ATTACK = 0, SURROUND = 0
+IF OPPDISTANCE < 5 AND TRAPPED = 0 THEN ATTACK = 1, SURROUND = 0
+IF OPPDISTANCE >= 5 OR TRAPPED = 1 THEN SURROUND = 0
+
+// Test if the opponent is staying in one quadrant---------------------------------------------------------------
+IF OPPQUAD1 < 1 AND OPPQUAD2 < 1 AND OPPQUAD3 < 1 AND OPPQUAD4 > 0 THEN SURROUND = 1
+IF OPPQUAD1 < 1 AND OPPQUAD2 < 1 AND OPPQUAD3 > 0 AND OPPQUAD4 < 1 THEN SURROUND = 1
+IF OPPQUAD1 < 1 AND OPPQUAD2 > 0 AND OPPQUAD3 < 1 AND OPPQUAD4 < 1 THEN SURROUND = 1
+IF OPPQUAD1 > 0 AND OPPQUAD2 < 1 AND OPPQUAD3 < 1 AND OPPQUAD4 < 1 THEN SURROUND = 1
+
+// Back up strategy ---------------------------------------------------------------------------------------------
+IF TRAPPED = 0 AND ATTACK = 0 AND SURROUND = 0 THEN BACKUP = 1
+
+// STRATEGIES ///////////////////////////////////////////////////////////////////////////////////////////////////
+// Trapped Strategy ---------------------------------------------------------------------------------------------
+IF TRAPPED = 1 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) > 0 THEN MOVEx = MEx-1, STOP
+IF TRAPPED = 1 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN choose = 1
+IF choose = 1 AND AREA(MEx-1,MEy) >= AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF choose = 1 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF TRAPPED = 1 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) > 0 THEN MOVEy = MEy-1, STOP
+IF TRAPPED = 1 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN choose = 2
+IF choose = 2 AND AREA(MEx,MEy-1) >= AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF choose = 2 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF TRAPPED = 1 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx+1,MEy) = 0 AND BOARD(MEx-1,MEy) > 0 THEN MOVEx = MEx+1, STOP
+IF TRAPPED = 1 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx+1,MEy) = 0 AND BOARD(MEx-1,MEy) = 0 THEN choose = 3
+IF choose = 3 AND AREA(MEx+1,MEy) >= AREA(MEx-1,MEy) THEN MOVEx = MEx+1, STOP
+IF choose = 3 AND AREA(MEx+1,MEy) < AREA(MEx-1,MEy) THEN MOVEx = MEx-1, STOP
+IF TRAPPED = 1 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx,MEy+1) = 0 AND BOARD(MEx,MEy-1) > 0 THEN MOVEy = MEy+1, STOP
+IF TRAPPED = 1 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx,MEy+1) = 0 AND BOARD(MEx,MEy-1) = 0 THEN choose = 4
+IF choose = 4 AND AREA(MEx,MEy+1) >= AREA(MEx,MEy-1) THEN MOVEy = MEy+1, STOP
+IF choose = 4 AND AREA(MEx,MEy+1) < AREA(MEx,MEy-1) THEN MOVEy = MEy-1, STOP
+
+// Don't want to surround opponent, don't want to attack, don't want to defend ----------------------------------
+// Going vertical turns out to be a great way to block off the opponent, as well as fill space ------------------
+// and hope for the opponent to screw up by himself! ------------------------------------------------------------
+IF BACKUP = 1 AND BOARD(MEx,MEy-1) = 0 THEN MOVEy=MEy-1, STOP
+IF BACKUP = 1 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN BACKUPdecide = 1
+IF BACKUPdecide = 1 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF BACKUPdecide = 1 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF BACKUPdecide = 1 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF BACKUP = 1 AND BOARD(MEx,MEy+1) = 0 THEN MOVEy=MEy+1, STOP
+IF BACKUP = 1 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN BACKUPdecide = 2
+IF BACKUPdecide = 2 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF BACKUPdecide = 2 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF BACKUPdecide = 2 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF BACKUP = 1 AND BOARD(MEx-1,MEy) = 0 THEN MOVEx=MEx-1, STOP
+IF BACKUP = 1 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN BACKUPdecide = 3
+IF BACKUPdecide = 3 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF BACKUPdecide = 3 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF BACKUPdecide = 3 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF BACKUP = 1 AND BOARD(MEx+1,MEy) = 0 THEN MOVEx=MEx+1, STOP
+IF BACKUP = 1 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN BACKUPdecide = 4
+IF BACKUPdecide = 4 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF BACKUPdecide = 4 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF BACKUPdecide = 4 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+
+// Attack the Opponent / Go directly toward opponent ------------------------------------------------------------
+IF ATTACK = 1 AND distx >= disty THEN attackx = 1
+IF ATTACK = 1 AND distx < disty THEN attackx = 2
+IF attackx = 1 AND OPPx-MEx > 0 AND BOARD(MEx+1,MEy) = 0 THEN MOVEx = MEx+1, STOP
+IF attackx = 1 AND MEx-OPPx > 0 AND BOARD(MEx-1,MEy) = 0 THEN MOVEx = MEx-1, STOP
+IF attackx = 2 AND OPPy-MEy > 0 AND BOARD(MEx,MEy+1) = 0 THEN MOVEy = MEy+1, STOP
+IF attackx = 2 AND MEy-OPPy > 0 AND BOARD(MEx,MEy-1) = 0 THEN MOVEy = MEy-1, STOP
+
+// Surround Strategy --------------------------------------------------------------------------------------------
+IF SURROUND = 1 AND OPPQUAD1 > 0 THEN OppInQuad1=1
+IF SURROUND = 1 AND OPPQUAD2 > 0 THEN OppInQuad2=1
+IF SURROUND = 1 AND OPPQUAD3 > 0 THEN OppInQuad3=1
+IF SURROUND = 1 AND OPPQUAD4 > 0 THEN OppInQuad4=1
+// Opponent is in Quadrant 1
+IF OppInQuad1 = 1 AND OPPx < MEx AND OPPy < MEy THEN URLD = 1
+IF OppInQuad1 = 1 AND URLD < 1 THEN LRUD = 1
+// Opponent is in Quadrant 2
+IF OppInQuad2 = 1 AND OPPx > MEx AND OPPy < MEy THEN UDRL = 1
+IF OppInQuad2 = 1 AND UDRL < 1 THEN RLUD = 1
+// Opponent is in Quadrant 3
+IF OppInQuad3 = 1 AND OPPx < MEx AND OPPy > MEy THEN DULR = 1
+IF OppInQuad3 = 1 AND DULR < 1 THEN LRDU = 1
+// Opponent is in Quadrant 4
+IF OppInQuad4 = 1 AND OPPx > MEx AND OPPy > MEy THEN DURL = 1
+IF OppInQuad4 = 1 AND DURL < 1 THEN RLDU = 1
+
+// 12 Different Paths to Follow ------------------------------------------------------------------------
+// Move UP, RIGHT, LEFT, DOWN, in that priority, when possible -----------------------------------------
+IF URLD = 1 AND BOARD(MEx,MEy-1) = 0 THEN MOVEy=MEy-1, STOP
+IF URLD = 1 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN URLDdecide = 1
+IF URLDdecide = 1 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF URLDdecide = 1 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF URLDdecide = 1 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF URLDdecide < 1 AND URLD = 1 AND BOARD(MEx+1,MEy) = 0 THEN MOVEx=MEx+1, STOP
+IF URLD = 1 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN URLDdecide = 4
+IF URLDdecide = 4 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF URLDdecide = 4 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF URLDdecide = 4 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF URLDdecide < 1 AND URLD = 1 AND BOARD(MEx-1,MEy) = 0 THEN MOVEx=MEx-1, STOP
+IF URLD = 1 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN URLDdecide = 3
+IF URLDdecide = 3 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF URLDdecide = 3 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF URLDdecide = 3 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF URLDdecide < 1 AND URLD = 1 AND BOARD(MEx,MEy+1) = 0 THEN MOVEy=MEy+1, STOP
+IF URLD = 1 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN URLDdecide = 2
+IF URLDdecide = 2 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF URLDdecide = 2 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF URLDdecide = 2 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+// Move UP, DOWN, LEFT, RIGHT, in that priority, when possible -----------------------------------------
+IF UDLR = 1 AND BOARD(MEx,MEy-1) = 0 THEN MOVEy=MEy-1, STOP
+IF UDLR = 1 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN UDLRdecide = 1
+IF UDLRdecide = 1 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF UDLRdecide = 1 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF UDLRdecide = 1 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF UDLRdecide < 1 AND UDLR = 1 AND BOARD(MEx,MEy+1) = 0 THEN MOVEy=MEy+1, STOP
+IF UDLR = 1 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN UDLRdecide = 2
+IF UDLRdecide = 2 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF UDLRdecide = 2 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF UDLRdecide = 2 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF UDLRdecide < 1 AND UDLR = 1 AND BOARD(MEx-1,MEy) = 0 THEN MOVEx=MEx-1, STOP
+IF UDLR = 1 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN UDLRdecide = 3
+IF UDLRdecide = 3 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF UDLRdecide = 3 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF UDLRdecide = 3 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF UDLRdecide < 1 AND UDLR = 1 AND BOARD(MEx+1,MEy) = 0 THEN MOVEx=MEx+1, STOP
+IF UDLR = 1 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN UDLRdecide = 4
+IF UDLRdecide = 4 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF UDLRdecide = 4 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF UDLRdecide = 4 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+// Move DOWN, UP, LEFT, RIGHT, in that priority, when possible -----------------------------------------
+IF DULR = 1 AND BOARD(MEx,MEy+1) = 0 THEN MOVEy=MEy+1, STOP
+IF DULR = 1 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN DULRdecide = 2
+IF DULRdecide = 2 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF DULRdecide = 2 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF DULRdecide = 2 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF DULRdecide < 1 AND DULR = 1 AND BOARD(MEx,MEy-1) = 0 THEN MOVEy=MEy-1, STOP
+IF DULR = 1 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN DULRdecide = 1
+IF DULRdecide = 1 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF DULRdecide = 1 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF DULRdecide = 1 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF DULRdecide < 1 AND DULR = 1 AND BOARD(MEx-1,MEy) = 0 THEN MOVEx=MEx-1, STOP
+IF DULR = 1 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN DULRdecide = 3
+IF DULRdecide = 3 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF DULRdecide = 3 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF DULRdecide = 3 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF DULRdecide < 1 AND DULR = 1 AND BOARD(MEx+1,MEy) = 0 THEN MOVEx=MEx+1, STOP
+IF DULR = 1 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN DULRdecide = 4
+IF DULRdecide = 4 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF DULRdecide = 4 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF DULRdecide = 4 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+// Move UP, DOWN, RIGHT, LEFT, in that priority, when possible -----------------------------------------
+IF UDRL = 1 AND BOARD(MEx,MEy-1) = 0 THEN MOVEy=MEy-1, STOP
+IF UDRL = 1 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN UDRLdecide = 1
+IF UDRLdecide = 1 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF UDRLdecide = 1 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF UDRLdecide = 1 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF UDRLdecide < 1 AND UDRL = 1 AND BOARD(MEx,MEy+1) = 0 THEN MOVEy=MEy+1, STOP
+IF UDRL = 1 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN UDRLdecide = 2
+IF UDRLdecide = 2 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF UDRLdecide = 2 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF UDRLdecide = 2 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF UDRLdecide < 1 AND UDRL = 1 AND BOARD(MEx+1,MEy) = 0 THEN MOVEx=MEx+1, STOP
+IF UDRL = 1 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN UDRLdecide = 4
+IF UDRLdecide = 4 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF UDRLdecide = 4 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF UDRLdecide = 4 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF UDRLdecide < 1 AND UDRL = 1 AND BOARD(MEx-1,MEy) = 0 THEN MOVEx=MEx-1, STOP
+IF UDRL = 1 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN UDRLdecide = 3
+IF UDRLdecide = 3 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF UDRLdecide = 3 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF UDRLdecide = 3 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+// Move DOWN, UP, RIGHT, LEFT, in that priority, when possible -----------------------------------------
+IF DURL = 1 AND BOARD(MEx,MEy+1) = 0 THEN MOVEy=MEy+1, STOP
+IF DURL = 1 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN DURLdecide = 2
+IF DURLdecide = 2 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF DURLdecide = 2 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF DURLdecide = 2 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF DURLdecide < 1 AND DURL = 1 AND BOARD(MEx,MEy-1) = 0 THEN MOVEy=MEy-1, STOP
+IF DURL = 1 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN DURLdecide = 1
+IF DURLdecide = 1 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF DURLdecide = 1 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF DURLdecide = 1 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF DURLdecide < 1 AND DURL = 1 AND BOARD(MEx+1,MEy) = 0 THEN MOVEx=MEx+1, STOP
+IF DURL = 1 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN DURLdecide = 4
+IF DURLdecide = 4 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF DURLdecide = 4 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF DURLdecide = 4 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF DURLdecide < 1 AND DURL = 1 AND BOARD(MEx-1,MEy) = 0 THEN MOVEx=MEx-1, STOP
+IF DURL = 1 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN DURLdecide = 3
+IF DURLdecide = 3 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF DURLdecide = 3 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF DURLdecide = 3 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+// Move DOWN, LEFT, RIGHT, UP, in that priority, when possible -----------------------------------------
+IF DLRU = 1 AND BOARD(MEx,MEy+1) = 0 THEN MOVEy=MEy+1, STOP
+IF DLRU = 1 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN DLRUdecide = 2
+IF DLRUdecide = 2 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF DLRUdecide = 2 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF DLRUdecide = 2 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF DLRUdecide < 1 AND DLRU = 1 AND BOARD(MEx-1,MEy) = 0 THEN MOVEx=MEx-1, STOP
+IF DLRU = 1 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN DLRUdecide = 3
+IF DLRUdecide = 3 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF DLRUdecide = 3 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF DLRUdecide = 3 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF DLRUdecide < 1 AND DLRU = 1 AND BOARD(MEx+1,MEy) = 0 THEN MOVEx=MEx+1, STOP
+IF DLRU = 1 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN DLRUdecide = 4
+IF DLRUdecide = 4 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF DLRUdecide = 4 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF DLRUdecide = 4 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF DLRUdecide < 1 AND DLRU = 1 AND BOARD(MEx,MEy-1) = 0 THEN MOVEy=MEy-1, STOP
+IF DLRU = 1 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN DLRUdecide = 1
+IF DLRUdecide = 1 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF DLRUdecide = 1 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF DLRUdecide = 1 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+// Move LEFT, RIGHT, UP, DOWN in that priority, when possible -----------------------------------------
+IF LRUD = 1 AND BOARD(MEx-1,MEy) = 0 THEN MOVEx=MEx-1, STOP
+IF LRUD = 1 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN LRUDdecide = 3
+IF LRUDdecide = 3 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF LRUDdecide = 3 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF LRUDdecide = 3 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF LRUDdecide < 1 AND LRUD = 1 AND BOARD(MEx+1,MEy) = 0 THEN MOVEx=MEx+1, STOP
+IF LRUD = 1 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN LRUDdecide = 4
+IF LRUDdecide = 4 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF LRUDdecide = 4 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF LRUDdecide = 4 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF LRUDdecide < 1 AND LRUD = 1 AND BOARD(MEx,MEy-1) = 0 THEN MOVEy=MEy-1, STOP
+IF LRUD = 1 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN LRUDdecide = 1
+IF LRUDdecide = 1 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF LRUDdecide = 1 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF LRUDdecide = 1 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF LRUDdecide < 1 AND LRUD = 1 AND BOARD(MEx,MEy+1) = 0 THEN MOVEy=MEy+1, STOP
+IF LRUD = 1 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN LRUDdecide = 2
+IF LRUDdecide = 2 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF LRUDdecide = 2 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF LRUDdecide = 2 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+// Move RIGHT, LEFT, UP, DOWN in that priority, when possible -----------------------------------------
+IF RLUD = 1 AND BOARD(MEx+1,MEy) = 0 THEN MOVEx=MEx+1, STOP
+IF RLUD = 1 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN RLUDdecide = 4
+IF RLUDdecide = 4 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF RLUDdecide = 4 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF RLUDdecide = 4 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF RLUDdecide < 1 AND RLUD = 1 AND BOARD(MEx-1,MEy) = 0 THEN MOVEx=MEx-1, STOP
+IF RLUD = 1 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN RLUDdecide = 3
+IF RLUDdecide = 3 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF RLUDdecide = 3 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF RLUDdecide = 3 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF RLUDdecide < 1 AND RLUD = 1 AND BOARD(MEx,MEy-1) = 0 THEN MOVEy=MEy-1, STOP
+IF RLUD = 1 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN RLUDdecide = 1
+IF RLUDdecide = 1 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF RLUDdecide = 1 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF RLUDdecide = 1 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF RLUDdecide < 1 AND RLUD = 1 AND BOARD(MEx,MEy+1) = 0 THEN MOVEy=MEy+1, STOP
+IF RLUD = 1 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN RLUDdecide = 2
+IF RLUDdecide = 2 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF RLUDdecide = 2 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF RLUDdecide = 2 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+// Move RIGHT, DOWN, UP, LEFT in that priority, when possible -----------------------------------------
+IF RDUL = 1 AND BOARD(MEx+1,MEy) = 0 THEN MOVEx=MEx+1, STOP
+IF RDUL = 1 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN RDULdecide = 4
+IF RDULdecide = 4 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF RDULdecide = 4 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF RDULdecide = 4 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF RDULdecide < 1 AND RDUL = 1 AND BOARD(MEx,MEy+1) = 0 THEN MOVEy=MEy+1, STOP
+IF RDUL = 1 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN RDULdecide = 2
+IF RDULdecide = 2 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF RDULdecide = 2 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF RDULdecide = 2 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF RDULdecide < 1 AND RDUL = 1 AND BOARD(MEx,MEy-1) = 0 THEN MOVEy=MEy-1, STOP
+IF RDUL = 1 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN RDULdecide = 1
+IF RDULdecide = 1 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF RDULdecide = 1 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF RDULdecide = 1 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF RDULdecide < 1 AND RDUL = 1 AND BOARD(MEx-1,MEy) = 0 THEN MOVEx=MEx-1, STOP
+IF RDUL = 1 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN RDULdecide = 3
+IF RDULdecide = 3 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF RDULdecide = 3 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF RDULdecide = 3 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+// Move LEFT, RIGHT, DOWN, UP in that priority, when possible -----------------------------------------
+IF LRDU = 1 AND BOARD(MEx-1,MEy) = 0 THEN MOVEx=MEx-1, STOP
+IF LRDU = 1 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN LRDUdecide = 3
+IF LRDUdecide = 3 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF LRDUdecide = 3 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF LRDUdecide = 3 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF LRDUdecide < 1 AND LRDU = 1 AND BOARD(MEx+1,MEy) = 0 THEN MOVEx=MEx+1, STOP
+IF LRDU = 1 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN LRDUdecide = 4
+IF LRDUdecide = 4 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF LRDUdecide = 4 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF LRDUdecide = 4 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF LRDUdecide < 1 AND LRDU = 1 AND BOARD(MEx,MEy+1) = 0 THEN MOVEy=MEy+1, STOP
+IF LRDU = 1 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN LRDUdecide = 2
+IF LRDUdecide = 2 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF LRDUdecide = 2 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF LRDUdecide = 2 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF LRDUdecide < 1 AND LRDU = 1 AND BOARD(MEx,MEy-1) = 0 THEN MOVEy=MEy-1, STOP
+IF LRDU = 1 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN LRDUdecide = 1
+IF LRDUdecide = 1 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF LRDUdecide = 1 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF LRDUdecide = 1 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+// Move LEFT, UP, DOWN, RIGHT in that priority, when possible -----------------------------------------
+IF LUDR = 1 AND BOARD(MEx-1,MEy) = 0 THEN MOVEx=MEx-1, STOP
+IF LUDR = 1 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN LUDRdecide = 3
+IF LUDRdecide = 3 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF LUDRdecide = 3 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF LUDRdecide = 3 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF LUDRdecide < 1 AND LUDR = 1 AND BOARD(MEx,MEy-1) = 0 THEN MOVEy=MEy-1, STOP
+IF LUDR = 1 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN LUDRdecide = 1
+IF LUDRdecide = 1 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF LUDRdecide = 1 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF LUDRdecide = 1 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF LUDRdecide < 1 AND LUDR = 1 AND BOARD(MEx,MEy+1) = 0 THEN MOVEy=MEy+1, STOP
+IF LUDR = 1 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN LUDRdecide = 2
+IF LUDRdecide = 2 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF LUDRdecide = 2 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF LUDRdecide = 2 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF LUDRdecide < 1 AND LUDR = 1 AND BOARD(MEx+1,MEy) = 0 THEN MOVEx=MEx+1, STOP
+IF LUDR = 1 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN LUDRdecide = 4
+IF LUDRdecide = 4 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF LUDRdecide = 4 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF LUDRdecide = 4 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+// Move RIGHT, LEFT, DOWN, UP in that priority, when possible -----------------------------------------
+IF RLDU = 1 AND BOARD(MEx+1,MEy) = 0 THEN MOVEx=MEx+1, STOP
+IF RLDU = 1 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN RLDUdecide = 4
+IF RLDUdecide = 4 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF RLDUdecide = 4 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF RLDUdecide = 4 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF RLDUdecide < 1 AND RLDU = 1 AND BOARD(MEx-1,MEy) = 0 THEN MOVEx=MEx-1, STOP
+IF RLDU = 1 AND BOARD(MEx-1,MEy) > 0 AND BOARD(MEx+1,MEy) > 0 AND BOARD(MEx,MEy-1) = 0 AND BOARD(MEx,MEy+1) = 0 THEN RLDUdecide = 3
+IF RLDUdecide = 3 AND AREA(MEx,MEy-1) > AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF RLDUdecide = 3 AND AREA(MEx,MEy-1) < AREA(MEx,MEy+1) THEN MOVEy = MEy+1, STOP
+IF RLDUdecide = 3 AND AREA(MEx,MEy-1) = AREA(MEx,MEy+1) THEN MOVEy = MEy-1, STOP
+IF RLDUdecide < 1 AND RLDU = 1 AND BOARD(MEx,MEy+1) = 0 THEN MOVEy=MEy+1, STOP
+IF RLDU = 1 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN RLDUdecide = 2
+IF RLDUdecide = 2 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF RLDUdecide = 2 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF RLDUdecide = 2 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF RLDUdecide < 1 AND RLDU = 1 AND BOARD(MEx,MEy-1) = 0 THEN MOVEy=MEy-1, STOP
+IF RLDU = 1 AND BOARD(MEx,MEy-1) > 0 AND BOARD(MEx,MEy+1) > 0 AND BOARD(MEx-1,MEy) = 0 AND BOARD(MEx+1,MEy) = 0 THEN RLDUdecide = 1
+IF RLDUdecide = 1 AND AREA(MEx-1,MEy) > AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP
+IF RLDUdecide = 1 AND AREA(MEx-1,MEy) < AREA(MEx+1,MEy) THEN MOVEx = MEx+1, STOP
+IF RLDUdecide = 1 AND AREA(MEx-1,MEy) = AREA(MEx+1,MEy) THEN MOVEx = MEx-1, STOP

@@ -1,0 +1,7 @@
+This Program was written for my Artificial Intelligence course.
+
+A rule-based inference engine was built in the jcd5044.h class, and the rules were read in from the jcd5044.dat1 file.
+It was then uploaded to the teachers website, and pitted against other rule-based, neural network, and genetic algorithms; hence the need for the username naming convention.
+The game resembles the "Tron" light cycle game, or a two player game of snake.
+
+All rule-based algorithms beat non-rule-based algorithms, with ours coming in 2nd overall.

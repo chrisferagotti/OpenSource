@@ -1,0 +1,6 @@
+Just a basic calculator program. Made in a couple of hours to refamiliarize myself with the awt framework, since I haven't made anything with it in a while.
+This program has had almost no error checking, and the reciprocal, square root buttons don't work yet.
+
+USAGE: Calculator will only do single operations. So, in the form of pressing, in this order, "3+4="; can't handle "3+4-6=" yet.
+
+NOTE: "Caluculator" is not a typo.
