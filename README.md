@@ -9,7 +9,8 @@ It's an ongoing process, and things will be added as I find them, get them from 
 DESCRIPTIONS
 ------------
 
-PacMan - A Java game modeled after the PacMan arcade game, made for my CompSci 221 class
+- PacMan
+-- A Java game modeled after the PacMan arcade game, made for my CompSci 221 class
 
 BathtubDefender - A Battleship-style Java based game
 
